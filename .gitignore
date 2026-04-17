@@ -1,0 +1,5 @@
+config.inc.php
+logs/
+*.swp
+*.swo
+.DS_Store

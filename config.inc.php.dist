@@ -1,0 +1,96 @@
+<?php
+
+// =============================================================================
+// Deployment mode
+// =============================================================================
+
+// Browser-facing WebDAV base URL. The browser will PUT/MKCOL/MOVE against
+// "<dav_base_url>/files/{user}/..." and "<dav_base_url>/uploads/{user}/...".
+//
+// Mode A (recommended) — Roundcube nginx stream-proxies to Nextcloud:
+//   "/nc-dav"
+//
+// Mode B/C — Browser connects to Nextcloud directly (CORS must be configured):
+//   "https://cloud.example.com/remote.php/dav"
+//
+// No trailing slash.
+$config["nextcloud_direct_dav_base_url"] = "/nc-dav";
+
+// Browser-facing OCS base URL for share-link creation.
+// Mode A: "/nc-ocs"   Mode B/C: "https://cloud.example.com/ocs"
+// No trailing slash.
+$config["nextcloud_direct_ocs_base_url"] = "/nc-ocs";
+
+// Server-side absolute URL to Nextcloud. PHP uses this for Device-Flow login,
+// app-password revocation, and login probe. Required.
+// e.g. "https://cloud.example.com"
+$config["nextcloud_direct_server"] = "";
+
+// =============================================================================
+// User resolution
+// =============================================================================
+
+// Placeholders for resolving Nextcloud username from the Roundcube user.
+// %s => verbatim RC username   %i => IMAP login
+// %e => email   %l,%u => local-part   %d => domain   %h => IMAP host
+$config["nextcloud_direct_username"] = "%u";
+
+// =============================================================================
+// Upload behaviour
+// =============================================================================
+
+// Destination folder inside the user's Nextcloud. No sub-sub folders.
+// Accepts a string or a locale-keyed array:
+//   ["en_US" => "Mail Attachments", "de_DE" => "E-Mail Anhänge"]
+$config["nextcloud_direct_folder"] = "Mail Attachments";
+
+// Chunk size for chunked uploads, in MB. Nextcloud default is 10.
+$config["nextcloud_direct_chunk_size_mb"] = 10;
+
+// Files <= this threshold (MB) use a single PUT instead of chunked upload.
+$config["nextcloud_direct_single_put_threshold_mb"] = 10;
+
+// Soft-limit (bytes or "25M"). Files above this size prompt the user.
+// Must be smaller than max_message_size. null disables the prompt.
+$config["nextcloud_direct_softlimit"] = "25M";
+
+// Behaviour when max_message_size is exceeded:
+//   "prompt" => ask user (Outlook/Apple style)
+//   "upload" => auto-upload as filelink (Gmail style)
+$config["nextcloud_direct_behavior"] = "prompt";
+
+// =============================================================================
+// Share link options
+// =============================================================================
+
+// Generate password-protected links. Password appears in the email body only.
+$config["nextcloud_direct_password_protected_links"] = false;
+$config["nextcloud_direct_password_protected_links_locked"] = true;
+$config["nextcloud_direct_password_length"] = 12;
+$config["nextcloud_direct_password_alphabets"] = [
+    "123456789",
+    "ABCDEFGHJKLMNPQRSTUVWXYZ",
+    "abcdefghijkmnopqrstuvwxyz",
+];
+
+// Expire links after N days. false or <0 disables expiry.
+$config["nextcloud_direct_expire_links"] = false;
+$config["nextcloud_direct_expire_links_locked"] = true;
+
+// =============================================================================
+// Security / access control
+// =============================================================================
+
+// Verify HTTPS certificates on server-side Nextcloud calls.
+$config["nextcloud_direct_verify_https"] = true;
+
+// RC usernames / emails to exclude from the plugin entirely.
+$config["nextcloud_direct_exclude_users"] = [];
+
+// Same address-book filters as nextcloud_attachments. See that plugin's
+// config.inc.php.dist for documentation.
+$config["nextcloud_direct_exclude_users_in_addr_books"] = [];
+$config["nextcloud_direct_exclude_users_with_addr_book_value"] = [];
+$config["nextcloud_direct_exclude_users_in_addr_book_group"] = [];
+
+// vim: set syntax=php ts=4 sw=4:
