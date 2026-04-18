@@ -570,14 +570,18 @@
         };
         window.addEventListener("beforeunload", onUnload);
 
-        // Lazily cache the message DOM node (rcmail creates it asynchronously).
-        let progressEl = null;
         const progressCb = (loaded, total) => {
             const pct = total ? Math.round(loaded / total * 100) : 0;
-            if (!progressEl) progressEl = document.getElementById("rcmli" + progressMsg);
-            if (progressEl) {
-                const span = progressEl.querySelector("span") || progressEl;
-                span.textContent = t("upload_progress") + ": " + file.name + " (" + pct + "%)";
+            const text = t("upload_progress") + ": " + file.name + " (" + pct + "%)";
+            console.debug("[ncdirect] progressCb", { loaded, total, pct, progressMsg,
+                set_message: typeof rcmail.set_message });
+            // Try rcmail's own update path first; fall back to direct DOM query.
+            if (typeof rcmail.set_message === "function") {
+                rcmail.set_message(progressMsg, text);
+            } else {
+                const el = document.querySelector('[id^="rcmli"].loading span, [id^="rcmli"].loading, .messagebox.loading');
+                console.debug("[ncdirect] progressCb el", el);
+                if (el) (el.querySelector("span") || el).textContent = text;
             }
         };
 
