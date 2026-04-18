@@ -716,7 +716,7 @@
             const softlimit = rcmail.env[NC_ENV.softlimit];
 
             const overLimit = total > maxSize;
-            const overSoft = softlimit && total * 1.33 > softlimit;
+            const overSoft = softlimit && total > softlimit;
 
             if (!overLimit && !overSoft) {
                 return rcmail.__nc_direct_file_upload(files, post_args, props);
