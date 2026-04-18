@@ -434,25 +434,9 @@
     // --- attachment-list entry (so composer shows the cloud attachment) ----
 
     let fakeIdCounter = 0;
-    function addCloudAttachmentEntry(file, shareResult) {
-        fakeIdCounter++;
-        const id = "ncdirect" + Date.now() + fakeIdCounter;
-        if (!rcmail.env.attachments) rcmail.env.attachments = {};
-        rcmail.env.attachments["rcmfile" + id] = {
-            name: file.name,
-            size: file.size,
-            mimetype: file.type || "application/octet-stream",
-            isNextcloudAttachment: true,
-            nextcloudDirectPath: (shareResult.folder || "") + "/" + file.name,
-        };
-        // UI: add to the visible list. rcmail exposes add2attachment_list().
-        if (typeof rcmail.add2attachment_list === "function") {
-            const label = file.name + ' (' + humanBytes(file.size) + ')';
-            const del = '<a href="#" onclick="return rcmail.command(\'remove-attachment\',\'rcmfile' + id + '\',this);return false" title="' +
-                rcmail.gettext("remove") + '" class="delete"></a>';
-            rcmail.add2attachment_list("rcmfile" + id, { name: file.name, html: del + label, complete: false });
-        }
-        return id;
+    function addCloudAttachmentEntry() {
+        // Cloud attachments are inserted as links into the email body only.
+        // No entry in the attachment list — mirrors Gmail/Google Drive behaviour.
     }
 
     // --- body insertion (mirrors reference plugin link insertion) ----------
@@ -805,41 +789,6 @@
             return false;
         };
 
-        // Patch remove_attachment to ask whether to also delete from Nextcloud.
-        rcmail.__nc_direct_remove_attachment = rcmail.remove_attachment;
-        rcmail.remove_attachment = function (name) {
-            const a = rcmail.env.attachments && rcmail.env.attachments[name];
-            if (a && a.isNextcloudAttachment) {
-                function removeFromUI() {
-                    delete rcmail.env.attachments[name];
-                    const el = document.getElementById(name);
-                    if (el) el.remove();
-                }
-                const dialog = rcmail.show_popup_dialog(
-                    t("remove_from_nextcloud_question"),
-                    t("remove_attachment"), [
-                        {
-                            text: t("remove_from_nextcloud"),
-                            class: "mainaction delete",
-                            click: () => {
-                                beaconCleanup({ path: a.nextcloudDirectPath });
-                                removeFromUI();
-                                dialog.dialog("close");
-                            },
-                        },
-                        {
-                            text: t("keep_in_nextcloud"),
-                            class: "",
-                            click: () => {
-                                removeFromUI();
-                                dialog.dialog("close");
-                            },
-                        },
-                    ]);
-            } else {
-                rcmail.__nc_direct_remove_attachment(name);
-            }
-        };
     });
 
 })();
