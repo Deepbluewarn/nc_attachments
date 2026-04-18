@@ -450,7 +450,7 @@
             const html = '<a href="#" onclick="return rcmail.command(\'remove-attachment\',\'rcmfile' + id + '\',this);return false" title="' +
                 rcmail.gettext("remove") + '" class="delete">' +
                 rcmail.env.attachments["rcmfile" + id].name + ' (' + humanBytes(file.size) + ')</a>';
-            rcmail.add2attachment_list("rcmfile" + id, { name: file.name, html: html, complete: true });
+            rcmail.add2attachment_list("rcmfile" + id, { name: file.name, html: html, complete: false });
         }
         return id;
     }
