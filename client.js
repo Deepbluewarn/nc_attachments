@@ -466,47 +466,33 @@
         const editor = rcmail.editor.editor;
         let sigElem = editor.dom.get("_rc_sig") || editor.dom.get("v1_rc_sig");
 
-        const link = document.createElement("a");
-        link.href = url;
-        link.style.cssText = "text-decoration:none;color:black;display:grid;grid-template-columns:auto 1fr auto 0fr;grid-auto-rows:min-content;align-items:baseline;background:rgb(220,220,220);max-width:400px;padding:1em;border-radius:10px;font-family:sans-serif";
-
-        const fn = document.createElement("span");
-        fn.innerText = file.name + "\n";
-        fn.style.cssText = "grid-area:1 / 1;font-size:medium;max-width:280px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:fit-content";
-        link.append(fn);
-
-        const se = document.createElement("span");
-        se.innerText = size + "\n";
-        se.style.cssText = "grid-area:1 / 2;margin-left:1em;color:rgb(100,100,100);font-size:x-small;width:fit-content";
-        link.append(se);
-
-        const urlEl = document.createElement("span");
-        urlEl.innerText = url;
-        urlEl.style.cssText = "grid-area:2 / 1 / span 1 / span 3;color:rgb(100,100,100);align-self:end;font-size:small;white-space:nowrap;width:fit-content";
-        link.append(urlEl);
-
+        // Build HTML string so all nodes belong to the editor's own document.
+        let extraRows = "";
+        let row = 3;
         if (password) {
-            const pwe = document.createElement("span");
-            const pwtt = document.createElement("code");
-            pwtt.style.cssText = "font-family:monospace;font-size:13px";
-            pwtt.innerText = password;
-            pwe.innerText = rcmail.gettext("password", DOMAIN) + ": ";
-            pwe.append(pwtt);
-            pwe.style.cssText = "grid-area:3 / 1 / span 1 / span 3;color:rgb(100,100,100);align-self:end;font-size:small;width:fit-content";
-            link.append(pwe);
+            extraRows += `<span style="grid-area:${row} / 1 / span 1 / span 3;color:rgb(100,100,100);align-self:end;font-size:small;width:fit-content">`
+                + rcmail.gettext("password", DOMAIN) + ": "
+                + `<code style="font-family:monospace;font-size:13px">${password}</code></span>`;
+            row++;
         }
         if (expireDate) {
-            const row = password ? 4 : 3;
-            const dte = document.createElement("span");
-            dte.innerText = rcmail.gettext("valid_until", DOMAIN) + ": " + new Date(expireDate).toLocaleDateString();
-            dte.style.cssText = "grid-area:" + row + " / 1 / span 1 / span 3;color:rgb(100,100,100);align-self:end;font-size:small;width:fit-content";
-            link.append(dte);
+            extraRows += `<span style="grid-area:${row} / 1 / span 1 / span 3;color:rgb(100,100,100);align-self:end;font-size:small;width:fit-content">`
+                + rcmail.gettext("valid_until", DOMAIN) + ": " + new Date(expireDate).toLocaleDateString()
+                + "</span>";
         }
 
-        const p = document.createElement("p");
-        p.append(link);
-        if (sigElem) editor.getBody().insertBefore(p, sigElem);
-        else editor.getBody().appendChild(p);
+        const html = `<p><a href="${url}" style="text-decoration:none;color:black;display:grid;grid-template-columns:auto 1fr auto 0fr;grid-auto-rows:min-content;align-items:baseline;background:rgb(220,220,220);max-width:400px;padding:1em;border-radius:10px;font-family:sans-serif">`
+            + `<span style="grid-area:1 / 1;font-size:medium;max-width:280px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:fit-content">${file.name}</span>`
+            + `<span style="grid-area:1 / 2;margin-left:1em;color:rgb(100,100,100);font-size:x-small;width:fit-content">${size}</span>`
+            + `<span style="grid-area:2 / 1 / span 1 / span 3;color:rgb(100,100,100);align-self:end;font-size:small;white-space:nowrap;width:fit-content">${url}</span>`
+            + extraRows
+            + "</a></p>";
+
+        if (sigElem) {
+            sigElem.insertAdjacentHTML("beforebegin", html);
+        } else {
+            editor.getBody().insertAdjacentHTML("beforeend", html);
+        }
     }
 
     // --- upload orchestration ----------------------------------------------
