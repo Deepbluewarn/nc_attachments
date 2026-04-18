@@ -105,7 +105,7 @@ trait ShareLink
             }
 
             $ocs = new SimpleXMLElement($body);
-            $url = (string)$ocs->data->url;
+            $url = rtrim((string)$ocs->data->url, '/') . '/download';
 
             $html_block = $this->render_attachment_html([
                 'name' => $filename,

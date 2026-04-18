@@ -310,31 +310,36 @@
         const chunkSize = creds.chunkSize;
         const total = file.size;
         const numChunks = Math.ceil(total / chunkSize);
-        let uploaded = 0;
+        // inFlight[i] = bytes currently in-flight for chunk i (for live progress)
+        const inFlight = new Array(numChunks + 1).fill(0);
+        let committed = 0;
 
         // Count already-uploaded bytes toward progress.
         for (let i = 1; i <= numChunks; i++) {
             if (existing.has(i)) {
                 const size = i === numChunks ? (total - (i - 1) * chunkSize) : chunkSize;
-                uploaded += size;
+                committed += size;
             }
         }
-        progressCb(uploaded, total);
+        progressCb(committed, total);
 
+        const CONCURRENCY = creds.chunkConcurrency || 4;
+        const pending = [];
         for (let i = 1; i <= numChunks; i++) {
-            if (signal && signal.aborted) throw { kind: "abort" };
-            if (existing.has(i)) continue;
+            if (!existing.has(i)) pending.push(i);
+        }
 
+        async function uploadChunk(i) {
+            if (signal && signal.aborted) throw { kind: "abort" };
             const start = (i - 1) * chunkSize;
             const end = Math.min(start + chunkSize, total);
             const blob = file.slice(start, end);
-            const ord = String(i);
-            const chunkUrl = uploadsBase + "/" + ord;
+            const chunkUrl = uploadsBase + "/" + String(i);
 
             let attempt = 0;
-            let localUploaded = 0;
             while (true) {
                 attempt++;
+                inFlight[i] = 0;
                 try {
                     const res = await davRequest("PUT", chunkUrl, creds, {
                         body: blob,
@@ -343,19 +348,21 @@
                             "OC-Total-Length": String(total),
                         },
                         onProgress: (loaded) => {
-                            progressCb(uploaded + loaded, total);
-                            localUploaded = loaded;
+                            inFlight[i] = loaded;
+                            const live = inFlight.reduce((a, b) => a + b, 0);
+                            progressCb(committed + live, total);
                         },
                         signal,
                     });
                     if (res.status >= 200 && res.status < 300) {
-                        uploaded += (end - start);
-                        progressCb(uploaded, total);
-                        break;
+                        committed += (end - start);
+                        inFlight[i] = 0;
+                        progressCb(committed, total);
+                        return;
                     }
                     if ((res.status === 423 || res.status === 503) && attempt < 5) {
+                        inFlight[i] = 0;
                         await sleep(1000 * Math.pow(2, attempt));
-                        uploaded -= localUploaded; // rollback partial-progress cosmetic
                         continue;
                     }
                     const err = new Error("chunk PUT failed: " + res.status);
@@ -364,14 +371,26 @@
                 } catch (e) {
                     if (e.kind === "abort") throw e;
                     if (e.kind === "network" && attempt < 5) {
+                        inFlight[i] = 0;
                         await sleep(1000 * Math.pow(2, attempt));
-                        uploaded -= localUploaded;
                         continue;
                     }
                     throw e;
                 }
             }
         }
+
+        // Run up to CONCURRENCY chunks in parallel.
+        let idx = 0;
+        async function worker() {
+            while (idx < pending.length) {
+                const i = pending[idx++];
+                await uploadChunk(i);
+            }
+        }
+        const workers = [];
+        for (let w = 0; w < Math.min(CONCURRENCY, pending.length); w++) workers.push(worker());
+        await Promise.all(workers);
 
         // Assemble: MOVE .file → final destination.
         // Destination must be a URL Nextcloud itself can resolve against its own

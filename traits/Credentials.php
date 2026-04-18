@@ -41,6 +41,7 @@ trait Credentials
 
         $chunk_size_mb = (int)$this->rcmail->config->get(__("chunk_size_mb"), 10);
         $single_put_mb = (int)$this->rcmail->config->get(__("single_put_threshold_mb"), 10);
+        $chunk_concurrency = max(1, (int)$this->rcmail->config->get(__("chunk_concurrency"), 4));
 
         // Server-side Nextcloud DAV base for MOVE Destination header.
         // The browser-facing dav_base_url may be a nginx proxy path (/nc-dav),
@@ -59,6 +60,7 @@ trait Credentials
             'folder' => $folder,
             'chunkSize' => $chunk_size_mb * 1024 * 1024,
             'singlePutThreshold' => $single_put_mb * 1024 * 1024,
+            'chunkConcurrency' => $chunk_concurrency,
         ]);
     }
 }

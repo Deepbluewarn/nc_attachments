@@ -50,6 +50,10 @@ $config["nextcloud_direct_chunk_size_mb"] = 10;
 // Files <= this threshold (MB) use a single PUT instead of chunked upload.
 $config["nextcloud_direct_single_put_threshold_mb"] = 10;
 
+// Number of chunks uploaded in parallel. Higher = faster on fast connections,
+// but risks 503s if Nextcloud PHP-FPM worker count is low. 4-8 is a safe range.
+$config["nextcloud_direct_chunk_concurrency"] = 4;
+
 // Soft-limit (bytes or "25M"). Files above this size prompt the user.
 // Must be smaller than max_message_size. null disables the prompt.
 $config["nextcloud_direct_softlimit"] = "25M";
