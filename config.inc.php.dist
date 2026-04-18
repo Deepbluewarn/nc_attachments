@@ -1,74 +1,75 @@
 <?php
 
 // =============================================================================
-// Deployment mode
+// 배포 모드
 // =============================================================================
 
-// Browser-facing WebDAV base URL. The browser will PUT/MKCOL/MOVE against
-// "<dav_base_url>/files/{user}/..." and "<dav_base_url>/uploads/{user}/...".
+// 브라우저가 WebDAV 요청을 보낼 기본 URL.
+// 브라우저는 "<dav_base_url>/files/{user}/..." 및 "<dav_base_url>/uploads/{user}/..."에 PUT/MKCOL/MOVE를 수행합니다.
 //
-// Mode A (recommended) — Roundcube nginx stream-proxies to Nextcloud:
+// Mode A (권장) — Roundcube nginx가 Nextcloud로 스트림 프록시:
 //   "/nc-dav"
 //
-// Mode B/C — Browser connects to Nextcloud directly (CORS must be configured):
+// Mode B/C — 브라우저가 Nextcloud에 직접 연결 (CORS 설정 필요):
 //   "https://cloud.example.com/remote.php/dav"
 //
-// No trailing slash.
+// 끝에 슬래시 없음.
 $config["nextcloud_direct_dav_base_url"] = "/nc-dav";
 
-// Browser-facing OCS base URL for share-link creation.
+// 브라우저가 공유 링크 생성에 사용하는 OCS 기본 URL.
 // Mode A: "/nc-ocs"   Mode B/C: "https://cloud.example.com/ocs"
-// No trailing slash.
+// 끝에 슬래시 없음.
 $config["nextcloud_direct_ocs_base_url"] = "/nc-ocs";
 
-// Server-side absolute URL to Nextcloud. PHP uses this for Device-Flow login,
-// app-password revocation, and login probe. Required.
-// e.g. "https://cloud.example.com"
+// Nextcloud의 서버 측 절대 URL. PHP에서 Device Flow 로그인,
+// 앱 비밀번호 폐기, 로그인 확인에 사용합니다. 필수값.
+// 예: "https://cloud.example.com"
 $config["nextcloud_direct_server"] = "";
 
 // =============================================================================
-// User resolution
+// 사용자 이름 해석
 // =============================================================================
 
-// Placeholders for resolving Nextcloud username from the Roundcube user.
-// %s => verbatim RC username   %i => IMAP login
-// %e => email   %l,%u => local-part   %d => domain   %h => IMAP host
+// Roundcube 사용자로부터 Nextcloud 사용자 이름을 구성하는 플레이스홀더.
+// %s => RC 사용자명 그대로   %i => IMAP 로그인
+// %e => 이메일   %l,%u => 로컬 파트   %d => 도메인   %h => IMAP 호스트
 $config["nextcloud_direct_username"] = "%u";
 
 // =============================================================================
-// Upload behaviour
+// 업로드 동작
 // =============================================================================
 
-// Destination folder inside the user's Nextcloud. No sub-sub folders.
-// Accepts a string or a locale-keyed array:
-//   ["en_US" => "Mail Attachments", "de_DE" => "E-Mail Anhänge"]
+// 사용자 Nextcloud 내 업로드 대상 폴더. 하위 폴더는 지원하지 않습니다.
+// 문자열 또는 로케일 키 배열로 지정 가능:
+//   ["en_US" => "Mail Attachments", "ko_KR" => "메일 첨부파일"]
 $config["nextcloud_direct_folder"] = "Mail Attachments";
 
-// Chunk size for chunked uploads, in MB. Nextcloud default is 10.
+// 청크 업로드 시 청크 크기 (MB). Nextcloud 기본값은 10입니다.
 $config["nextcloud_direct_chunk_size_mb"] = 10;
 
-// Files <= this threshold (MB) use a single PUT instead of chunked upload.
+// 이 크기(MB) 이하인 파일은 청크 업로드 대신 단일 PUT을 사용합니다.
 $config["nextcloud_direct_single_put_threshold_mb"] = 10;
 
-// Number of chunks uploaded in parallel. Higher = faster on fast connections,
-// but risks 503s if Nextcloud PHP-FPM worker count is low. 4-8 is a safe range.
+// 동시에 업로드할 청크 수. 값이 높을수록 빠르지만,
+// Nextcloud PHP-FPM 워커 수가 적으면 503 오류가 발생할 수 있습니다. 4~8이 안전한 범위입니다.
 $config["nextcloud_direct_chunk_concurrency"] = 4;
 
-// Soft-limit (bytes or "25M"). Files above this size prompt the user.
-// Must be smaller than max_message_size. null disables the prompt.
+// 소프트 한도 (바이트 또는 "25M"). 이 크기를 초과하는 파일은 사용자에게 확인을 요청합니다.
+// max_message_size보다 작아야 합니다. null로 설정하면 확인을 비활성화합니다.
 $config["nextcloud_direct_softlimit"] = "25M";
 
-// Behaviour when max_message_size is exceeded:
-//   "prompt" => ask user (Outlook/Apple style)
-//   "upload" => auto-upload as filelink (Gmail style)
+// max_message_size를 초과했을 때의 동작:
+//   "prompt" => 사용자에게 확인 요청 (Outlook/Apple 방식)
+//   "upload" => 자동으로 파일 링크로 업로드 (Gmail 방식)
 $config["nextcloud_direct_behavior"] = "prompt";
 
 // =============================================================================
-// Share link options
+// 공유 링크 옵션
 // =============================================================================
 
-// Generate password-protected links. Password appears in the email body only.
+// 비밀번호로 보호된 링크를 생성합니다. 비밀번호는 메일 본문에만 표시됩니다.
 $config["nextcloud_direct_password_protected_links"] = false;
+// true로 설정하면 사용자가 설정 페이지에서 이 옵션을 변경할 수 없습니다.
 $config["nextcloud_direct_password_protected_links_locked"] = true;
 $config["nextcloud_direct_password_length"] = 12;
 $config["nextcloud_direct_password_alphabets"] = [
@@ -77,22 +78,25 @@ $config["nextcloud_direct_password_alphabets"] = [
     "abcdefghijkmnopqrstuvwxyz",
 ];
 
-// Expire links after N days. false or <0 disables expiry.
+// 링크 만료 활성화 여부. true이면 공유 링크에 만료일이 설정됩니다.
 $config["nextcloud_direct_expire_links"] = false;
-$config["nextcloud_direct_expire_links_locked"] = true;
+// 링크 만료 기간 (일 단위). expire_links가 true일 때 적용됩니다.
+$config["nextcloud_direct_expire_links_after"] = 7;
+// true로 설정하면 사용자가 설정 페이지에서 만료 옵션을 변경할 수 없습니다.
+$config["nextcloud_direct_expire_links_locked"] = false;
 
 // =============================================================================
-// Security / access control
+// 보안 / 접근 제어
 // =============================================================================
 
-// Verify HTTPS certificates on server-side Nextcloud calls.
+// 서버 측 Nextcloud 호출 시 HTTPS 인증서를 검증합니다.
 $config["nextcloud_direct_verify_https"] = true;
 
-// RC usernames / emails to exclude from the plugin entirely.
+// 플러그인에서 완전히 제외할 RC 사용자 이름 또는 이메일 목록.
 $config["nextcloud_direct_exclude_users"] = [];
 
-// Same address-book filters as nextcloud_attachments. See that plugin's
-// config.inc.php.dist for documentation.
+// nextcloud_attachments 플러그인과 동일한 주소록 필터.
+// 자세한 설명은 해당 플러그인의 config.inc.php.dist를 참고하세요.
 $config["nextcloud_direct_exclude_users_in_addr_books"] = [];
 $config["nextcloud_direct_exclude_users_with_addr_book_value"] = [];
 $config["nextcloud_direct_exclude_users_in_addr_book_group"] = [];
