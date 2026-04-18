@@ -23,8 +23,13 @@ $config["nextcloud_direct_ocs_base_url"] = "/nc-ocs";
 
 // Nextcloud의 서버 측 절대 URL. PHP에서 Device Flow 로그인,
 // 앱 비밀번호 폐기, 로그인 확인에 사용합니다. 필수값.
-// 예: "https://cloud.example.com"
+// 예: "https://cloud.example.com" (내부 주소여도 무방)
 $config["nextcloud_direct_server"] = "";
+
+// 사용자에게 표시할 Nextcloud 공개 URL. 설정하면 설정 페이지에 링크로 표시됩니다.
+// server가 내부 IP/주소일 때 사용. 비워두면 서버 주소 행이 숨겨집니다.
+// 예: "https://drive.example.com"
+$config["nextcloud_direct_public_url"] = "";
 
 // =============================================================================
 // 사용자 이름 해석

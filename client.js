@@ -447,10 +447,10 @@
         };
         // UI: add to the visible list. rcmail exposes add2attachment_list().
         if (typeof rcmail.add2attachment_list === "function") {
-            const html = '<a href="#" onclick="return rcmail.command(\'remove-attachment\',\'rcmfile' + id + '\',this);return false" title="' +
-                rcmail.gettext("remove") + '" class="delete">' +
-                rcmail.env.attachments["rcmfile" + id].name + ' (' + humanBytes(file.size) + ')</a>';
-            rcmail.add2attachment_list("rcmfile" + id, { name: file.name, html: html, complete: false });
+            const label = file.name + ' (' + humanBytes(file.size) + ')';
+            const del = '<a href="#" onclick="return rcmail.command(\'remove-attachment\',\'rcmfile' + id + '\',this);return false" title="' +
+                rcmail.gettext("remove") + '" class="delete"></a>';
+            rcmail.add2attachment_list("rcmfile" + id, { name: file.name, html: del + label, complete: false });
         }
         return id;
     }
@@ -810,6 +810,11 @@
         rcmail.remove_attachment = function (name) {
             const a = rcmail.env.attachments && rcmail.env.attachments[name];
             if (a && a.isNextcloudAttachment) {
+                function removeFromUI() {
+                    delete rcmail.env.attachments[name];
+                    const el = document.getElementById(name);
+                    if (el) el.remove();
+                }
                 const dialog = rcmail.show_popup_dialog(
                     t("remove_from_nextcloud_question"),
                     t("remove_attachment"), [
@@ -818,7 +823,7 @@
                             class: "mainaction delete",
                             click: () => {
                                 beaconCleanup({ path: a.nextcloudDirectPath });
-                                rcmail.__nc_direct_remove_attachment(name);
+                                removeFromUI();
                                 dialog.dialog("close");
                             },
                         },
@@ -826,7 +831,7 @@
                             text: t("keep_in_nextcloud"),
                             class: "",
                             click: () => {
-                                rcmail.__nc_direct_remove_attachment(name);
+                                removeFromUI();
                                 dialog.dialog("close");
                             },
                         },

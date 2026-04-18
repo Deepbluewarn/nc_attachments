@@ -16,8 +16,9 @@ trait Preferences
             return ["blocks" => $param["blocks"]];
         }
 
-        $prefs  = $this->rcmail->user->get_prefs();
-        $server = rtrim($this->rcmail->config->get(__("server"), ""), "/");
+        $prefs      = $this->rcmail->user->get_prefs();
+        $server     = rtrim($this->rcmail->config->get(__("server"), ""), "/");
+        $public_url = rtrim($this->rcmail->config->get(__("public_url"), ""), "/");
         $blocks = $param["blocks"];
 
         $login_result   = $this->login_status();
@@ -30,18 +31,21 @@ trait Preferences
 
         $disconnect_link = "<a href='#' onclick=\"rcmail.http_post('plugin.nextcloud_direct_disconnect','_token='+rcmail.env.request_token);return false\">"
             . htmlentities($this->gettext("disconnect")) . "</a>";
-        $connect_link = "<a href='#' onclick=\"window.rcmail.nextcloud_direct_login_button_click_handler(null,null);return false\">"
+        $connect_link = "<a href='#' onclick=\"rcmail.http_post('plugin.nextcloud_direct_login');return false\">"
             . htmlentities($this->gettext("connect")) . "</a>";
 
+        $server_row = [];
+        if ($public_url) {
+            $server_row["server"] = [
+                "title"   => htmlentities($this->gettext("cloud_server")),
+                "content" => "<a href='" . htmlentities($public_url) . "' target='_blank'>"
+                    . htmlentities(parse_url($public_url, PHP_URL_HOST)) . "</a>",
+            ];
+        }
+
         $blocks["plugin.nextcloud_direct"] = [
-            "name" => htmlentities($this->gettext("cloud_attachments")),
-            "options" => [
-                "server" => [
-                    "title"   => htmlentities($this->gettext("cloud_server")),
-                    "content" => $server
-                        ? "<a href='" . htmlentities($server) . "' target='_blank'>" . htmlentities($server_host) . "</a>"
-                        : htmlentities($server_host),
-                ],
+            "name"    => htmlentities($this->gettext("cloud_attachments")),
+            "options" => $server_row + [
                 "connection" => [
                     "title"   => htmlentities($this->gettext("status")),
                     "content" => $login_result["status"] == "ok"
