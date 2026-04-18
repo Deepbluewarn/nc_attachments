@@ -2,6 +2,12 @@
 
 > **English version**: [README.en.md](README.en.md)
 
+## 기반 프로젝트
+
+이 플러그인은 Bennet Becker의 [`nextcloud_attachments`](https://github.com/bnnt/nextcloud_attachments) 플러그인을 참고하여 개발되었습니다. 참고 플러그인의 인증 모델, 설정 구조, 그리고 일부 클라이언트 로직을 참고했으며, **핵심적인 차이점은 파일 바이트가 PHP를 거치지 않고 브라우저에서 Nextcloud로 직접 업로드된다**는 점입니다.
+
+---
+
 # nextcloud_direct
 
 **브라우저 → Nextcloud 직접 업로드** Roundcube 플러그인입니다. Roundcube PHP는 인증 credential을 발급하고 공유 링크를 생성하기만 하며, 파일 바이트는 PHP를 거치지 않습니다. nginx `client_max_body_size`, PHP `post_max_size`, PHP 메모리/타임아웃 제한으로 인한 대용량 파일 업로드 문제를 해결합니다.
@@ -154,5 +160,3 @@ $config['plugins'] = ['nextcloud_direct', /* … */];
 - 본문 HTML의 첨부 파일 체크섬.
 
 ---
-
-기반: [`nextcloud_attachments`](https://github.com/bnnt/nextcloud_attachments) (Bennet Becker, MIT)

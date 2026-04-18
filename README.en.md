@@ -1,11 +1,13 @@
 # nextcloud_direct
 
-Roundcube plugin for **browser → Nextcloud direct file uploads**. Roundcube PHP
-issues auth credentials and creates share links; the file bytes never transit
-PHP. Solves the classic "nginx `client_max_body_size` + PHP `post_max_size` +
-PHP memory/timeout" problem that the server-side
-[`nextcloud_attachments`](https://github.com/bnnt/nextcloud_attachments) plugin
-hits on multi-GB files.
+Roundcube plugin for **browser → Nextcloud direct file uploads**. Based on
+[`nextcloud_attachments`](https://github.com/bnnt/nextcloud_attachments) by
+Bennet Becker (MIT).
+
+Roundcube PHP issues auth credentials and creates share links; the file bytes
+never transit PHP. Solves the classic "nginx `client_max_body_size` + PHP
+`post_max_size` + PHP memory/timeout" problem that the server-side reference
+plugin hits on multi-GB files.
 
 Key features
 
@@ -179,6 +181,3 @@ takes time proportional to file size on older Nextcloud (<28). Increase
 - Attachment checksum in the body HTML.
 
 ---
-
-Based on [`nextcloud_attachments`](https://github.com/bnnt/nextcloud_attachments)
-by Bennet Becker (MIT).

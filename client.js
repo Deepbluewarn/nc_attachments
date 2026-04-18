@@ -195,6 +195,7 @@
             const xhr = new XMLHttpRequest();
             xhr.open(method, url, true);
             xhr.setRequestHeader("Authorization", basicAuthHeader(creds.loginName, creds.appPassword));
+            xhr.setRequestHeader("OCS-APIRequest", "true");
             if (headers) for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
 
             xhr.onload = () => resolve({
@@ -327,7 +328,7 @@
             const start = (i - 1) * chunkSize;
             const end = Math.min(start + chunkSize, total);
             const blob = file.slice(start, end);
-            const ord = String(i).padStart(5, "0");
+            const ord = String(i);
             const chunkUrl = uploadsBase + "/" + ord;
 
             let attempt = 0;
@@ -399,7 +400,7 @@
         const doc = parser.parseFromString(res.responseText, "application/xml");
         const hrefs = doc.querySelectorAll("href, d\\:href, D\\:href");
         hrefs.forEach(h => {
-            const m = /\/(\d{5})(?:\/)?$/.exec(h.textContent.replace(/\/+$/, ""));
+            const m = /\/(\d+)(?:\/)?$/.exec(h.textContent.replace(/\/+$/, ""));
             if (m) have.add(parseInt(m[1], 10));
         });
         return have;
