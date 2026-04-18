@@ -8,24 +8,11 @@ use html_inputfield;
 trait Preferences
 {
     /**
-     * preferences_sections_list hook: register a dedicated "Nextcloud" tab.
-     */
-    public function add_preferences_section(array $param): array
-    {
-        $param["list"]["nextcloud_direct"] = [
-            "id"      => "nextcloud_direct",
-            "section" => $this->gettext("cloud_attachments"),
-            "class"   => "nextcloud_direct",
-        ];
-        return $param;
-    }
-
-    /**
-     * preferences_list hook: populate the Nextcloud settings block.
+     * preferences_list hook: inject Nextcloud block into the "compose" section.
      */
     public function add_preferences(array $param): array
     {
-        if ($param["current"] != "nextcloud_direct") {
+        if ($param["current"] != "compose") {
             return ["blocks" => $param["blocks"]];
         }
 
@@ -33,7 +20,7 @@ trait Preferences
         $server = rtrim($this->rcmail->config->get(__("server"), ""), "/");
         $blocks = $param["blocks"];
 
-        $login_result  = $this->login_status();
+        $login_result   = $this->login_status();
         $can_disconnect = isset($prefs["nextcloud_direct_login"]);
         $username = $can_disconnect
             ? $prefs["nextcloud_direct_login"]["loginName"]
@@ -41,13 +28,12 @@ trait Preferences
 
         $server_host = $server ? parse_url($server, PHP_URL_HOST) : $this->gettext("not_configured");
 
-        // --- Connection block ------------------------------------------------
         $disconnect_link = "<a href='#' onclick=\"rcmail.http_post('plugin.nextcloud_direct_disconnect','_token='+rcmail.env.request_token);return false\">"
             . htmlentities($this->gettext("disconnect")) . "</a>";
         $connect_link = "<a href='#' onclick=\"window.rcmail.nextcloud_direct_login_button_click_handler(null,null);return false\">"
             . htmlentities($this->gettext("connect")) . "</a>";
 
-        $blocks["nextcloud_direct_connection"] = [
+        $blocks["plugin.nextcloud_direct"] = [
             "name" => htmlentities($this->gettext("cloud_attachments")),
             "options" => [
                 "server" => [
@@ -67,9 +53,6 @@ trait Preferences
             ],
         ];
 
-        // --- Share link options block ----------------------------------------
-        $share_options = [];
-
         if (!$this->rcmail->config->get(__("password_protected_links_locked"), true)) {
             $def = $this->rcmail->config->get(__("password_protected_links"), false) ? "1" : "0";
             $pp  = new html_checkbox([
@@ -77,7 +60,7 @@ trait Preferences
                 'value' => '1',
                 'name'  => '_' . __("password_protected_links"),
             ]);
-            $share_options["password_protected_links"] = [
+            $blocks["plugin.nextcloud_direct"]["options"]["password_protected_links"] = [
                 "title"   => htmlentities($this->gettext("password_protected_links")),
                 "content" => $pp->show($prefs[__("user_password_protected_links")] ?? $def),
             ];
@@ -90,11 +73,11 @@ trait Preferences
                 'value' => '1',
                 'name'  => '_' . __("expire_links"),
             ]);
-            $share_options["expire_links"] = [
+            $blocks["plugin.nextcloud_direct"]["options"]["expire_links"] = [
                 "title"   => htmlentities($this->gettext("expire_links")),
                 "content" => $ex->show($prefs[__("user_expire_links")] ?? ($def === false ? "0" : "1")),
             ];
-            $share_options["expire_links_after"] = [
+            $blocks["plugin.nextcloud_direct"]["options"]["expire_links_after"] = [
                 "title"   => htmlentities($this->gettext("expire_links_after")),
                 "content" => (new html_inputfield([
                     'type'  => 'number',
@@ -106,13 +89,6 @@ trait Preferences
             ];
         }
 
-        if (!empty($share_options)) {
-            $blocks["nextcloud_direct_options"] = [
-                "name"    => htmlentities($this->gettext("share_options")),
-                "options" => $share_options,
-            ];
-        }
-
         return ["blocks" => $blocks];
     }
 
@@ -121,7 +97,7 @@ trait Preferences
      */
     public function save_preferences(array $param): array
     {
-        if ($param["section"] != "nextcloud_direct") {
+        if ($param["section"] != "compose") {
             return $param;
         }
 
