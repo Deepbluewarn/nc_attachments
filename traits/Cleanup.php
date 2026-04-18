@@ -44,8 +44,14 @@ trait Cleanup
 
         $targets = [];
         if (!empty($path)) {
-            $segments = array_map('rawurlencode', explode('/', $path));
-            $targets[] = $server . "/remote.php/dav/files/" . rawurlencode($username) . "/" . implode('/', $segments);
+            $segments = explode('/', $path);
+            foreach ($segments as $seg) {
+                if ($seg === '' || $seg === '.' || $seg === '..') {
+                    return;
+                }
+            }
+            $encoded = array_map('rawurlencode', $segments);
+            $targets[] = $server . "/remote.php/dav/files/" . rawurlencode($username) . "/" . implode('/', $encoded);
         }
         if (!empty($transfer_id) && preg_match('/^[a-zA-Z0-9_-]{8,64}$/', $transfer_id)) {
             $targets[] = $server . "/remote.php/dav/uploads/" . rawurlencode($username) . "/" . rawurlencode($transfer_id);

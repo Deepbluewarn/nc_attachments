@@ -111,5 +111,7 @@ class nextcloud_direct extends rcube_plugin
         $this->rcmail->output->set_env(__("max_message_size"), $max_message);
         $this->rcmail->output->set_env(__("behavior"),
             $this->rcmail->config->get(__("behavior"), "prompt"));
+        $this->rcmail->output->set_env(__("file_concurrency"),
+            max(1, (int)$this->rcmail->config->get(__("file_concurrency"), 1)));
     }
 }

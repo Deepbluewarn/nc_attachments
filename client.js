@@ -19,6 +19,7 @@
         softlimit: "nextcloud_direct_softlimit",
         behavior: "nextcloud_direct_behavior",
         maxMessageSize: "nextcloud_direct_max_message_size",
+        fileConcurrency: "nextcloud_direct_file_concurrency",
     };
 
     // --- tiny helpers -------------------------------------------------------
@@ -431,14 +432,6 @@
         return have;
     }
 
-    // --- attachment-list entry (so composer shows the cloud attachment) ----
-
-    let fakeIdCounter = 0;
-    function addCloudAttachmentEntry() {
-        // Cloud attachments are inserted as links into the email body only.
-        // No entry in the attachment list — mirrors Gmail/Google Drive behaviour.
-    }
-
     // --- body insertion (mirrors reference plugin link insertion) ----------
 
     function insertShareLinkIntoBody(file, shareResult) {
@@ -542,8 +535,20 @@
             return;
         }
 
-        for (const file of files) {
-            await uploadOneToCloud(file, creds, folderUrl);
+        const concurrency = Math.max(1, rcmail.env[NC_ENV.fileConcurrency] || 1);
+        if (concurrency === 1) {
+            for (const file of files) {
+                await uploadOneToCloud(file, creds, folderUrl);
+            }
+        } else {
+            // Upload up to `concurrency` files in parallel.
+            let idx = 0;
+            async function fileWorker() {
+                while (idx < files.length) {
+                    await uploadOneToCloud(files[idx++], creds, folderUrl);
+                }
+            }
+            await Promise.all(Array.from({ length: Math.min(concurrency, files.length) }, fileWorker));
         }
     }
 
@@ -625,7 +630,7 @@
         shareResult.folder = creds.folder;
 
         insertShareLinkIntoBody({ name: filename, size: file.size, type: file.type }, shareResult);
-        addCloudAttachmentEntry({ name: filename, size: file.size, type: file.type }, shareResult);
+        pendingCleanupPaths.add(finalPath);
 
         rcmail.display_message(filename + " " + t("upload_success_link_inserted"),
             "confirmation", 5000);
@@ -681,9 +686,22 @@
 
     // --- init: intercept rcmail.file_upload --------------------------------
 
+    // Tracks paths of successfully uploaded files so they can be cleaned up
+    // if the user cancels the compose window without sending.
+    const pendingCleanupPaths = new Set();
+
     rcmail.addEventListener("init", function () {
         // Kick off a login-status probe immediately.
         rcmail.http_get("plugin.nextcloud_direct_checklogin");
+
+        rcmail.addEventListener("compose-cancel", function () {
+            pendingCleanupPaths.forEach(path => beaconCleanup({ path }));
+            pendingCleanupPaths.clear();
+        });
+
+        rcmail.addEventListener("message_sent", function () {
+            pendingCleanupPaths.clear();
+        });
 
         // Keep original as fallback (small files, regular attachments).
         rcmail.__nc_direct_file_upload = rcmail.file_upload;

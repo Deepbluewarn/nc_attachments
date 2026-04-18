@@ -59,6 +59,12 @@ $config["nextcloud_direct_single_put_threshold_mb"] = 10;
 // Nextcloud PHP-FPM 워커 수가 적으면 503 오류가 발생할 수 있습니다. 4~8이 안전한 범위입니다.
 $config["nextcloud_direct_chunk_concurrency"] = 4;
 
+// 동시에 업로드할 파일 수. 여러 파일을 한꺼번에 선택했을 때 병렬로 처리합니다.
+// 청크 동시성(chunk_concurrency)과 곱으로 작용하므로 값이 너무 크면
+// Nextcloud PHP-FPM 워커 고갈로 503 오류가 발생할 수 있습니다.
+// 권장: 1(순차, 기본값) ~ 3 정도.
+$config["nextcloud_direct_file_concurrency"] = 1;
+
 // 소프트 한도 (바이트 또는 "25M"). 이 크기를 초과하는 파일은 사용자에게 확인을 요청합니다.
 // max_message_size보다 작아야 합니다. null로 설정하면 확인을 비활성화합니다.
 $config["nextcloud_direct_softlimit"] = "25M";
