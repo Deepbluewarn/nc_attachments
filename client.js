@@ -565,7 +565,19 @@
 
     async function uploadOneToCloud(file, creds, folderUrl) {
         const progressMsg = rcmail.display_message(
-            t("upload_progress") + ": " + file.name + " (0%)", "loading", 0);
+            t("upload_progress") + ": " + file.name + " (0%)", "loading", 3600000);
+
+        // Cache the span Roundcube just created; find by file name since the
+        // element has no predictable ID in this Roundcube build.
+        const progressEl = (() => {
+            const spans = document.querySelectorAll(".loading span");
+            for (const s of spans) {
+                if (s.textContent.includes(file.name)) return s;
+            }
+            return null;
+        })();
+
+        console.log('progressEl: ', progressEl);
 
         let filename;
         try {
@@ -590,18 +602,9 @@
         window.addEventListener("beforeunload", onUnload);
 
         const progressCb = (loaded, total) => {
+            if (!progressEl) return;
             const pct = total ? Math.round(loaded / total * 100) : 0;
-            const text = t("upload_progress") + ": " + file.name + " (" + pct + "%)";
-            console.debug("[ncdirect] progressCb", { loaded, total, pct, progressMsg,
-                set_message: typeof rcmail.set_message });
-            // Try rcmail's own update path first; fall back to direct DOM query.
-            if (typeof rcmail.set_message === "function") {
-                rcmail.set_message(progressMsg, text);
-            } else {
-                const el = document.querySelector('[id^="rcmli"].loading span, [id^="rcmli"].loading, .messagebox.loading');
-                console.debug("[ncdirect] progressCb el", el);
-                if (el) (el.querySelector("span") || el).textContent = text;
-            }
+            progressEl.textContent = t("upload_progress") + ": " + file.name + " (" + pct + "%)";
         };
 
         try {
@@ -623,7 +626,7 @@
         rcmail.hide_message(progressMsg);
 
         // Finalizing / share link creation.
-        const finalizing = rcmail.display_message(t("upload_finalizing"), "loading", 0);
+        const finalizing = rcmail.display_message(t("upload_finalizing"), "loading", 3600000);
         let shareResult;
         try {
             shareResult = await createShareLink(filename, file.size, file.type);
