@@ -113,5 +113,7 @@ class nextcloud_direct extends rcube_plugin
             $this->rcmail->config->get(__("behavior"), "prompt"));
         $this->rcmail->output->set_env(__("file_concurrency"),
             max(1, (int)$this->rcmail->config->get(__("file_concurrency"), 1)));
+        $this->rcmail->output->set_env(__("service_name"),
+            $this->rcmail->config->get(__("service_name"), "Nextcloud"));
     }
 }

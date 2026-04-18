@@ -12,7 +12,10 @@
     "use strict";
 
     const DOMAIN = "nextcloud_direct";
-    const t = (k) => rcmail.gettext(k, DOMAIN);
+    const t = (k) => rcmail.gettext(k, DOMAIN).replace(
+        /%service%/g,
+        rcmail.env["nextcloud_direct_service_name"] || "Nextcloud"
+    );
 
     // Server-side env keys (set by Preferences hook).
     const NC_ENV = {

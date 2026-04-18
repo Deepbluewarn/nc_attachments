@@ -21,6 +21,10 @@ $config["nextcloud_direct_dav_base_url"] = "/nc-dav";
 // 끝에 슬래시 없음.
 $config["nextcloud_direct_ocs_base_url"] = "/nc-ocs";
 
+// 사용자에게 표시할 서비스 이름. 메시지/UI에서 "Nextcloud" 대신 표시됩니다.
+// 비워두면 "Nextcloud"가 기본값으로 사용됩니다.
+$config["nextcloud_direct_service_name"] = "Nextcloud";
+
 // Nextcloud의 서버 측 절대 URL. PHP에서 Device Flow 로그인,
 // 앱 비밀번호 폐기, 로그인 확인에 사용합니다. 필수값.
 // 예: "https://cloud.example.com" (내부 주소여도 무방)
