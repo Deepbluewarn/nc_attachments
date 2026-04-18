@@ -76,6 +76,7 @@ class nextcloud_direct extends rcube_plugin
 
         $this->add_hook("refresh", function ($param) { $this->poll($param); });
         $this->add_hook("ready", function ($param) { $this->insert_client_code($param); });
+        $this->add_hook("preferences_sections_list", function ($param) { return $this->add_preferences_section($param); });
         $this->add_hook("preferences_list", function ($param) { return $this->add_preferences($param); });
         $this->add_hook("preferences_save", function ($param) { return $this->save_preferences($param); });
     }
@@ -90,7 +91,8 @@ class nextcloud_direct extends rcube_plugin
         $section = rcube_utils::get_input_string('_section', rcube_utils::INPUT_GPC);
 
         $on_compose = (@$param["task"] == "mail" && @$param["action"] == "compose");
-        $on_prefs = (@$param["task"] == "settings" && @$param["action"] == "edit-prefs" && $section == "compose");
+        $on_prefs   = (@$param["task"] == "settings" && @$param["action"] == "edit-prefs"
+                       && in_array($section, ["compose", "nextcloud_direct"]));
 
         if (!($on_compose || $on_prefs)) {
             return;

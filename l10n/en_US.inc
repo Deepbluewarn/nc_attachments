@@ -56,6 +56,8 @@ $labels['disconnect'] = 'disconnect';
 $labels['connect'] = 'connect';
 $labels['not_connected'] = 'Not connected';
 
+$labels['not_configured'] = '(not configured)';
+$labels['share_options'] = 'Share Link Options';
 $labels['server_default'] = 'Server default: ';
 
 $labels['password_protected_links'] = 'Generate password protected Links';
