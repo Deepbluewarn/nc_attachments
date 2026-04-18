@@ -39,7 +39,6 @@ class nextcloud_direct extends rcube_plugin
     public function init(): void
     {
         $this->rcmail = rcmail::get_instance();
-        $this->load_config("config.inc.php.dist");
         $this->load_config();
 
         if (empty($this->rcmail->config->get(__("server")))) {
