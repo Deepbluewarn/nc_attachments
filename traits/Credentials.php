@@ -42,11 +42,19 @@ trait Credentials
         $chunk_size_mb = (int)$this->rcmail->config->get(__("chunk_size_mb"), 10);
         $single_put_mb = (int)$this->rcmail->config->get(__("single_put_threshold_mb"), 10);
 
+        // Server-side Nextcloud DAV base for MOVE Destination header.
+        // The browser-facing dav_base_url may be a nginx proxy path (/nc-dav),
+        // but Nextcloud validates Destination against its own base URI
+        // (/remote.php/dav/). PHP knows the real server URL.
+        $server = rtrim($this->rcmail->config->get(__("server"), ""), "/");
+        $dav_dest_base = $server ? $server . "/remote.php/dav" : null;
+
         $this->rcmail->output->command('plugin.nextcloud_direct_credentials_result', [
             'status' => 'ok',
             'loginName' => $prefs["nextcloud_direct_login"]["loginName"],
             'appPassword' => $prefs["nextcloud_direct_login"]["appPassword"],
             'davBaseUrl' => $dav_base,
+            'davDestBase' => $dav_dest_base,
             'ocsBaseUrl' => $ocs_base,
             'folder' => $folder,
             'chunkSize' => $chunk_size_mb * 1024 * 1024,

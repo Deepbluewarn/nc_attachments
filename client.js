@@ -374,11 +374,17 @@
         }
 
         // Assemble: MOVE .file → final destination.
+        // Destination must be a URL Nextcloud itself can resolve against its own
+        // base URI (/remote.php/dav/). When Mode A proxy is used, the browser-
+        // facing path (/nc-dav/...) is unknown to Nextcloud, so we use the
+        // server-side davDestBase (http://nextcloud:port/remote.php/dav) that
+        // PHP passes down via credentials.
+        const destBase = creds.davDestBase ||
+            (location.origin + creds.davBaseUrl.replace(/^\/nc-dav/, "/remote.php/dav"));
+        const destUrl = destBase + "/files/" + user + "/" + encodePath(creds.folder) + "/" + encodePath(filename);
         const moveRes = await davRequest("MOVE", uploadsBase + "/.file", creds, {
             headers: {
-                "Destination": finalUrl.startsWith("http")
-                    ? finalUrl
-                    : (location.origin + finalUrl),
+                "Destination": destUrl,
                 "OC-Total-Length": String(total),
                 "Overwrite": "T",
             },
@@ -564,12 +570,15 @@
         };
         window.addEventListener("beforeunload", onUnload);
 
+        // Lazily cache the message DOM node (rcmail creates it asynchronously).
+        let progressEl = null;
         const progressCb = (loaded, total) => {
             const pct = total ? Math.round(loaded / total * 100) : 0;
-            if (progressMsg && progressMsg.html) { /* rcmail messages are not easy to update */ }
-            // Best-effort status text via title attribute on the message DOM node.
-            const el = document.querySelector(".messagebox.loading");
-            if (el) el.textContent = t("upload_progress") + ": " + file.name + " (" + pct + "%)";
+            if (!progressEl) progressEl = document.getElementById("rcmli" + progressMsg);
+            if (progressEl) {
+                const span = progressEl.querySelector("span") || progressEl;
+                span.textContent = t("upload_progress") + ": " + file.name + " (" + pct + "%)";
+            }
         };
 
         try {
