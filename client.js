@@ -566,8 +566,6 @@
             return null;
         })();
 
-        console.log('progressEl: ', progressEl);
-
         let filename;
         try {
             filename = await uniqueFilename(folderUrl, creds, file.name.normalize("NFC"));

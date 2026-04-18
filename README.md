@@ -38,7 +38,7 @@ server {
         proxy_pass https://nextcloud.example.com/remote.php/dav/;
         proxy_http_version 1.1;
         proxy_request_buffering off;        # ← 핵심: 버퍼링 비활성화
-        client_max_body_size 0;
+        client_max_body_size 0; # 또는 청크 단위인 10MB 보다 약간 큰 값
         proxy_read_timeout 3600s;
         proxy_send_timeout 3600s;
         proxy_set_header Host nextcloud.example.com;
@@ -146,6 +146,16 @@ $config['plugins'] = ['nextcloud_direct', /* … */];
 **"login_required" (로그인 후에도):** 앱 패스워드 프로브가 401/403을 반환했습니다. `ncdirect` 로그(`logs/ncdirect`)에서 정확한 상태 코드를 확인하세요.
 
 **브라우저 콘솔의 CORS 오류:** Mode A 프록시가 설정되지 않았거나 브라우저가 절대 Nextcloud URL을 사용하고 있습니다. `dav_base_url`이 `/`로 시작하는지 확인하고 `/nc-dav/`가 실제로 올바르게 프록시되는지 테스트하세요(`curl -u user:pass https://mail.example.com/nc-dav/files/user/`).
+
+**청크 PUT이 413 (Request Entity Too Large)으로 실패:** Nextcloud 앞 단 nginx의 `client_max_body_size`가 청크 크기보다 작은 경우입니다. `chunk_size_mb`(기본 10 MB)보다 여유 있게 설정하세요.
+
+```nginx
+# Nextcloud nginx (nextcloud.example.com)
+client_max_body_size 12M;       # chunk_size_mb=10 기준, 약간 여유 확보
+proxy_request_buffering off;    # 청크를 디스크에 버퍼링하지 않고 바로 스트림
+```
+
+`chunk_size_mb`를 변경한 경우 `client_max_body_size`도 함께 조정하세요. Roundcube 쪽 nginx(`/nc-dav/` 프록시 블록)도 동일하게 `proxy_request_buffering off;`와 `client_max_body_size 0;`을 설정해야 합니다.
 
 **업로드가 100%에서 멈춘 후 실패:** 청크 업로드의 최종 `MOVE`는 파일 크기에 비례하는 시간이 걸립니다(특히 Nextcloud <28). 대용량 파일을 정기적으로 업로드하는 경우 `proxy_read_timeout`을 늘리세요.
 
